@@ -1,5 +1,3 @@
-Viewed basic-05-unit-gatt-structure.html:1-394
-
 針對 **`basic-05-unit-gatt-structure` (BLE 核心架構：GATT 協議與階層)** 單元，這是學員從「實作單一功能」轉向「通訊系統建模」的架構化課程。它要求學員具備 **物件導向設計 (Object-Oriented Design)** 的思維，學習如何將無人車的各項硬體功能（動力、感測、資訊）邏輯性地解耦為層級分明的 **GATT 服務樹**，並掌握與數據交換息息相關的 **描述符 (Descriptor)** 配置。
 
 以下是在 **GitHub Classroom** 部署其作業 (Assignments) 的具體建議：
