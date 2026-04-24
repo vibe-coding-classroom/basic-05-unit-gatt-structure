@@ -1,0 +1,89 @@
+name: Autograding
+on: [push]
+jobs:
+  autograding:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Cache PlatformIO
+        uses: actions/cache@v3
+        with:
+          path: ~/.platformio
+          key: ${{ runner.os }}-platformio
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install platformio
+      
+      # Test 1: Project Structure
+      - name: Check File Structure
+        id: structure
+        uses: education/autograding-command-grader@v1
+        with:
+          test-name: Project Structure
+          command: |
+            test -f src/main.cpp && \
+            test -f include/uuid_defs.h && \
+            test -f platformio.ini && \
+            test -f assets/test_log.md
+          timeout: 1
+          max-score: 20
+
+      # Test 2: UUID Definitions
+      - name: Check UUID Definitions
+        id: uuid-defs
+        uses: education/autograding-command-grader@v1
+        with:
+          test-name: UUID Blueprint
+          command: |
+            grep -E "DRIVE_SERVICE_UUID" include/uuid_defs.h && \
+            grep -E "TELEMETRY_SERVICE_UUID" include/uuid_defs.h && \
+            grep -E "DRIVE_CONTROL_CHAR_UUID" include/uuid_defs.h && \
+            grep -E "TELEMETRY_DATA_CHAR_UUID" include/uuid_defs.h
+          timeout: 1
+          max-score: 20
+
+      # Test 3: GATT Implementation Logic
+      - name: Check GATT Implementation
+        id: gatt-impl
+        uses: education/autograding-command-grader@v1
+        with:
+          test-name: GATT Logic & Descriptors
+          command: |
+            grep -E "createService" src/main.cpp && \
+            grep -E "createCharacteristic" src/main.cpp && \
+            grep -E "BLE2902" src/main.cpp && \
+            grep -E "notify\(\)" src/main.cpp
+          timeout: 1
+          max-score: 30
+
+      # Test 4: Compilation
+      - name: PlatformIO Build
+        id: build
+        uses: education/autograding-command-grader@v1
+        with:
+          test-name: Build Check
+          command: pio run
+          timeout: 10
+          max-score: 30
+
+      - name: Autograding Reporter
+        uses: education/autograding-grading-reporter@v1
+        env:
+          STRUCTURE_RESULTS: "${{steps.structure.outputs.result}}"
+          UUID-DEFS_RESULTS: "${{steps.uuid-defs.outputs.result}}"
+          GATT-IMPL_RESULTS: "${{steps.gatt-impl.outputs.result}}"
+          BUILD_RESULTS: "${{steps.build.outputs.result}}"
+        with:
+          runners: structure,uuid-defs,gatt-impl,build
